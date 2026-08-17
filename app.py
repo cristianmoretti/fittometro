@@ -1,3 +1,4 @@
+import pandas as pd 
 import streamlit as st 
 import time 
 
@@ -77,12 +78,14 @@ with col1:
 with col2:
     ascensore = st.number_input(label="Ascensore 🛗", step=1, min_value=0, format="%d")
 
-col1, col2 = st.columns([10, 0.9])
+col1, col2, col3 = st.columns([8, 0.9, 1])
 with col1: 
     totale = st.empty() 
     totale.metric("Totale (fitto netto)", f"{st.session_state.get('totale_valore', 0)} €")
 with col2: 
     button = st.button("Calcola")
+with col3: 
+    dettaglio = st.toggle("Dettaglio") 
 
 if "totale_valore" not in st.session_state:
     st.session_state.totale_valore = 0
@@ -109,3 +112,21 @@ if button:
         messaggio_errore = st.error("Il totale non può essere negativo!")
         time.sleep(3)
         messaggio_errore.empty()
+
+def evidenzia_riga(riga): 
+    if riga["voce"] in ["subtotale", "totale"]: 
+        return ["font-weight: bold"] * len(riga)
+    return [""] * len(riga)
+
+if dettaglio: 
+    st.session_state.primo_subtotale_valore = fitto - gas - luce - acqua
+    st.session_state.secondo_subtotale_valore = (
+        st.session_state.primo_subtotale_valore - internet - allarme
+    )
+    st.session_state.totale_valore = (
+        st.session_state.secondo_subtotale_valore - tari - ascensore
+    )
+    #create a dataframe in pandas 
+    dettaglio = pd.DataFrame({"voce": ["fitto", "gas", "luce", "acqua", "subtotale", "internet", "allarme", "subtotale", "tari", "ascensore", "totale"],
+                "valore": [fitto, gas, luce, acqua, st.session_state.primo_subtotale_valore, internet, allarme, st.session_state.secondo_subtotale_valore, tari, ascensore, st.session_state.totale_valore]})
+    st.dataframe(dettaglio.style.apply(evidenzia_riga, axis=1), use_container_width=True)
