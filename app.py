@@ -115,6 +115,7 @@ if button:
 
 col1, col2 = st.columns([4,6])
 with col1: 
+    info_cedolare_secca = st.info("Inserisci la somma dell'affitto su cui calcolare la cedolare secca.")
     affitto_cedolare_secca = st.number_input(label="Affitto cedolare secca 💰", step=1, min_value=0, format="%d")
 with col2:
     st.empty() 
