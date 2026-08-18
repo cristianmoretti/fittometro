@@ -113,8 +113,14 @@ if button:
         time.sleep(3)
         messaggio_errore.empty()
 
+col1, col2 = st.columns([4,6])
+with col1: 
+    affitto_cedolare_secca = st.number_input(label="Affitto cedolare secca 💰", step=1, min_value=0, format="%d")
+with col2:
+    st.empty() 
+
 def evidenzia_riga(riga): 
-    if riga["voce"] in ["subtotale", "totale"]: 
+    if riga["voce"] in ["subtotale", "totale", "totale dopo le tasse"]: 
         return ["font-weight: bold"] * len(riga)
     return [""] * len(riga)
 
@@ -127,6 +133,14 @@ if dettaglio:
         st.session_state.secondo_subtotale_valore - tari - ascensore
     )
     #create a dataframe in pandas 
-    dettaglio = pd.DataFrame({"voce": ["fitto", "gas", "luce", "acqua", "subtotale", "internet", "allarme", "subtotale", "tari", "ascensore", "totale"],
-                "valore": [fitto, gas, luce, acqua, st.session_state.primo_subtotale_valore, internet, allarme, st.session_state.secondo_subtotale_valore, tari, ascensore, st.session_state.totale_valore]})
+    dettaglio = pd.DataFrame({"voce": ["fitto", "gas", "luce", "acqua", "subtotale", "internet", "allarme", "subtotale", "tari", "ascensore", "totale", "cedolare secca", "totale dopo le tasse"],
+                "costo annuale": [fitto, gas, luce, acqua, st.session_state.primo_subtotale_valore, internet, allarme, st.session_state.secondo_subtotale_valore, tari, ascensore, st.session_state.totale_valore, affitto_cedolare_secca*0.21, st.session_state.totale_valore - affitto_cedolare_secca*0.21]})
+    dettaglio["costo annuale"] = dettaglio["costo annuale"].astype(int)
+    dettaglio["costo mensile"] = (dettaglio["costo annuale"] / 12).astype(int) 
+    dettaglio["Costo mensile (2 persone)"] = dettaglio.apply(
+        lambda riga: riga["costo annuale"] / 12 
+        if riga["voce"] == "fitto"
+        else riga["costo annuale"] / (12 * 2), 
+        axis=1 
+    ).astype(int) 
     st.dataframe(dettaglio.style.apply(evidenzia_riga, axis=1), use_container_width=True)
